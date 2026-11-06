@@ -56,7 +56,7 @@ func (m *Machine) doExecuteStep() (nip int, execErr error) {
 	}
 	switch cmd.Code {
 	case OcRead:
-		reg, err := m.getTargetReg(cmd.Op)
+		reg, err := m.getTargetReg(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
@@ -66,7 +66,7 @@ func (m *Machine) doExecuteStep() (nip int, execErr error) {
 		}
 		m.regs.set(reg, val)
 	case OcWrite:
-		val, err := m.getValue(cmd.Op)
+		val, err := m.getValue(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
@@ -74,37 +74,37 @@ func (m *Machine) doExecuteStep() (nip int, execErr error) {
 			return 0, err
 		}
 	case OcLoad:
-		val, err := m.getValue(cmd.Op)
+		val, err := m.getValue(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
 		m.regs.set(0, val)
 	case OcStore:
-		reg, err := m.getTargetReg(cmd.Op)
+		reg, err := m.getTargetReg(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
 		m.regs.set(reg, m.regs.get(0))
 	case OcAdd:
-		val, err := m.getValue(cmd.Op)
+		val, err := m.getValue(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
 		m.regs.set(0, m.regs.get(0)+val)
 	case OcSub:
-		val, err := m.getValue(cmd.Op)
+		val, err := m.getValue(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
 		m.regs.set(0, m.regs.get(0)-val)
 	case OcMul:
-		val, err := m.getValue(cmd.Op)
+		val, err := m.getValue(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
 		m.regs.set(0, m.regs.get(0)*val)
 	case OcDiv:
-		val, err := m.getValue(cmd.Op)
+		val, err := m.getValue(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
@@ -113,13 +113,13 @@ func (m *Machine) doExecuteStep() (nip int, execErr error) {
 		}
 		m.regs.set(0, m.regs.get(0)/val)
 	case OcJump:
-		target, err := m.getTargetLabel(cmd.Op)
+		target, err := m.getTargetLabel(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
 		return target, nil
 	case OcJgtz:
-		target, err := m.getTargetLabel(cmd.Op)
+		target, err := m.getTargetLabel(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
@@ -127,7 +127,7 @@ func (m *Machine) doExecuteStep() (nip int, execErr error) {
 			return target, nil
 		}
 	case OcJzero:
-		target, err := m.getTargetLabel(cmd.Op)
+		target, err := m.getTargetLabel(&cmd.Op)
 		if err != nil {
 			return 0, err
 		}
@@ -143,7 +143,7 @@ func (m *Machine) doExecuteStep() (nip int, execErr error) {
 	return m.ip + 1, nil
 }
 
-func (m *Machine) getValue(op Operand) (int, error) {
+func (m *Machine) getValue(op *Operand) (int, error) {
 	if op.Mode == AmImm {
 		return op.Val, nil
 	}
@@ -154,7 +154,7 @@ func (m *Machine) getValue(op Operand) (int, error) {
 	return m.regs.get(reg), nil
 }
 
-func (m *Machine) getTargetReg(op Operand) (int, error) {
+func (m *Machine) getTargetReg(op *Operand) (int, error) {
 	reg := op.Val
 	if reg > 0 && op.Mode == AmPtr {
 		reg = m.regs.get(reg)
@@ -165,7 +165,7 @@ func (m *Machine) getTargetReg(op Operand) (int, error) {
 	return reg, nil
 }
 
-func (m *Machine) getTargetLabel(op Operand) (int, error) {
+func (m *Machine) getTargetLabel(op *Operand) (int, error) {
 	val, err := m.getValue(op)
 	if err != nil {
 		return 0, err
